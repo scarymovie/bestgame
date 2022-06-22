@@ -13,10 +13,14 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
+
         $validated = $request->only('phone', 'password');
 
+//        $validated['foo'] = 'bar';
         $token = Auth::attempt($validated);
-
+//        Auth::user()->update([
+//            'foo' => 'bar'
+//        ]);
         $user = Auth::user();
 
         return $this->respondWithToken($token, $user);
@@ -35,7 +39,6 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
-            'user' => $user
         ]);
     }
 
