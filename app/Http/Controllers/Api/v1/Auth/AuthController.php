@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
+use Tymon\JWTAuth\JWT;
 
 
 class AuthController extends Controller
@@ -14,23 +15,28 @@ class AuthController extends Controller
     {
         $validated = $request->only('phone', 'password');
 
-        Auth::attempt($validated);
+        $token = Auth::attempt($validated);
 
         $user = Auth::user();
 
-        $token = $user->createToken('secret')->plainTextToken;
-
-        $cookie = cookie('jwt', $token, 60*24); // 1 day
-
-        return response()->json()->withCookie($cookie);
+        return $this->respondWithToken($token, $user);
     }
 
-    public function logout()
+    public function logout($token)
     {
-        $cookie = Cookie::forget('jwt');
         return response()->json([
             'message' => 'разлогинился'
-        ])->withCookie($cookie);
+        ]);
+    }
+
+    protected function respondWithToken($token, $user)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            'user' => $user
+        ]);
     }
 
     public function user()
